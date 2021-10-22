@@ -18,9 +18,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 public class WeatherControllerTest {
+
+  private AutoCloseable closeable;
   @Mock
   private OpenWeatherMapClient client;
-  private AutoCloseable closeable;
 
   @BeforeEach
   public void openMocks() {
