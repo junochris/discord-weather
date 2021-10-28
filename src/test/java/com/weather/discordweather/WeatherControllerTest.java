@@ -1,6 +1,10 @@
 package com.weather.discordweather;
 
-import com.weather.discordweather.client.OpenWeatherMapClient;
+import com.weather.discordweather.client.openweathermap.OpenWeatherMapClient;
+import com.weather.discordweather.client.openweathermap.model.CurrentWeatherForecast;
+import com.weather.discordweather.client.openweathermap.model.OneCallResponse;
+import com.weather.discordweather.client.openweathermap.model.WeatherAlert;
+import com.weather.discordweather.client.openweathermap.model.WeatherCondition;
 import com.weather.discordweather.controller.WeatherController;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +17,10 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -93,11 +101,17 @@ public class WeatherControllerTest {
     @Test
     @DisplayName("returns OK if latitude and longitude are valid")
     public void getWeatherValid() {
-      Mockito.when(client.getWeather(33.0, 80.0)).thenReturn("Valid!");
+      OneCallResponse callResponse = new OneCallResponse(
+          1,
+          new CurrentWeatherForecast(1, 1, 1, 1.0f, 1.0f, 1, 1, Optional.of(1.0f),
+              List.of(new WeatherCondition("Valid")),
+              List.of(new WeatherAlert("Name", "Event", 1, 1, "Test", Collections.emptyList()))),
+          Collections.emptyList(), Collections.emptyList());
+      Mockito.when(client.getWeather(33.0, 80.0)).thenReturn(callResponse);
       var controller = new WeatherController(client);
       var response = controller.weather(33.0, 80.0);
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-      assertThat(response.getBody()).isEqualTo("Valid!");
+      assertThat(response.getBody()).isEqualTo(callResponse);
     }
   }
 }

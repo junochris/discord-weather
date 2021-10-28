@@ -1,6 +1,9 @@
 package com.weather.discordweather.controller;
 
-import com.weather.discordweather.client.OpenWeatherMapClient;
+import com.weather.discordweather.client.openweathermap.OpenWeatherMapClient;
+import com.weather.discordweather.client.openweathermap.model.OneCallResponse;
+import com.weather.discordweather.model.DiscordWeatherForecast;
+import com.weather.discordweather.model.DiscordWeatherForecastConverter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,17 +22,19 @@ public class WeatherController {
   }
 
   @GetMapping("/weather")
-  public ResponseEntity<String> weather(
+  public ResponseEntity<OneCallResponse> weather(
       @RequestParam(value = "lat", required = false) Double lat,
       @RequestParam(value = "lon", required = false) Double lon) {
     if (lat == null || lon == null) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Put in lat and lon u heathen.");
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     } else if (lat > 90 || lat < -90) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid latitude");
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     } else if (lon > 180 || lon < -180) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid longitude");
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     } else {
-      return ResponseEntity.ok(service.getWeather(lat, lon));
+      OneCallResponse response = service.getWeather(lat, lon);
+      DiscordWeatherForecast forecast = DiscordWeatherForecastConverter.convert(response);
+      return ResponseEntity.ok(response);
     }
   }
 }
