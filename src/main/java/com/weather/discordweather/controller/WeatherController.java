@@ -1,7 +1,6 @@
 package com.weather.discordweather.controller;
 
 import com.weather.discordweather.client.openweathermap.OpenWeatherMapClient;
-import com.weather.discordweather.client.openweathermap.model.OneCallResponse;
 import com.weather.discordweather.model.DiscordWeatherForecast;
 import com.weather.discordweather.model.DiscordWeatherForecastConverter;
 import org.springframework.http.HttpStatus;
@@ -22,7 +21,7 @@ public class WeatherController {
   }
 
   @GetMapping("/weather")
-  public ResponseEntity<OneCallResponse> weather(
+  public ResponseEntity<DiscordWeatherForecast> weather(
       @RequestParam(value = "lat", required = false) Double lat,
       @RequestParam(value = "lon", required = false) Double lon) {
     if (lat == null || lon == null) {
@@ -32,9 +31,7 @@ public class WeatherController {
     } else if (lon > 180 || lon < -180) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     } else {
-      OneCallResponse response = service.getWeather(lat, lon);
-      DiscordWeatherForecast forecast = DiscordWeatherForecastConverter.convert(response);
-      return ResponseEntity.ok(response);
+      return ResponseEntity.ok(DiscordWeatherForecastConverter.convert(service.getWeather(lat, lon)));
     }
   }
 }
