@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -115,7 +116,7 @@ public class WeatherControllerTest {
               new TemperatureForecast(76.93f, 63.9f),
               36,
               List.of(new WeatherCondition("clear sky")),
-              Collections.emptyList())));
+              Optional.of(Collections.emptyList()))));
       DiscordWeatherForecast forecast = DiscordWeatherForecastConverter.convert(callResponse);
       Mockito.when(client.getWeather(33.0, 80.0)).thenReturn(callResponse);
       var controller = new WeatherController(client);

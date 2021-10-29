@@ -1,6 +1,7 @@
 package com.weather.discordweather.client.openweathermap.model;
 
 import java.util.List;
+import java.util.Optional;
 
 public record DailyWeatherForecast(
     int dt,
@@ -9,5 +10,5 @@ public record DailyWeatherForecast(
     TemperatureForecast temp,
     int humidity,
     List<WeatherCondition> weather,
-    List<WeatherAlert> alerts
+    Optional<List<WeatherAlert>> alerts
 ) {}

@@ -23,8 +23,8 @@ public class DiscordWeatherForecastConverter {
 
       // Collect alerts
       List<DiscordWeatherAlert> alerts = Collections.emptyList();
-      if (currentDay.alerts() != null) {
-        for (WeatherAlert alert : currentDay.alerts()) {
+      if (currentDay.alerts().isPresent()) {
+        for (WeatherAlert alert : currentDay.alerts().get()) {
           LocalDateTime startTime = LocalDateTime.ofEpochSecond(alert.start(), 0, timezone);
           LocalDateTime endTime = LocalDateTime.ofEpochSecond(alert.end(), 0, timezone);
           DiscordWeatherAlert discordWeatherAlert = new DiscordWeatherAlert(
@@ -65,7 +65,7 @@ public class DiscordWeatherForecastConverter {
         }
       }
 
-      DiscordWeatherForecast forecast = new DiscordWeatherForecast(
+      return new DiscordWeatherForecast(
           "",
           date.format(DateTimeFormatter.ofPattern("EEE, MMM d")),
           alerts,
@@ -82,8 +82,6 @@ public class DiscordWeatherForecastConverter {
           temp6Pm,
           temp9Pm
       );
-
-      return forecast;
     }
 
     return null;
