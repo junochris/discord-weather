@@ -1,27 +1,34 @@
 package com.weather.discordweather.controller;
 
+import com.weather.discordweather.client.discord.DiscordClient;
 import com.weather.discordweather.client.openweathermap.OpenWeatherMapClient;
-import com.weather.discordweather.model.DiscordWeatherForecast;
-import com.weather.discordweather.model.DiscordWeatherForecastConverter;
+import com.weather.discordweather.client.openweathermap.converter.OneCallResponseMapper;
+import com.weather.discordweather.model.WeatherForecast;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 @RestController
 public class WeatherController {
-  private OpenWeatherMapClient service;
+  private final DiscordClient discordService;
+  private final OpenWeatherMapClient openWeatherService;
 
   @Inject
-  public WeatherController(OpenWeatherMapClient ws) {
-    service = ws;
+  public WeatherController(
+      DiscordClient ds,
+      OpenWeatherMapClient ws) {
+    discordService = ds;
+    openWeatherService = ws;
   }
 
   @GetMapping("/weather")
-  public ResponseEntity<DiscordWeatherForecast> weather(
+  public ResponseEntity<WeatherForecast> weather(
       @RequestParam(value = "lat", required = false) Double lat,
       @RequestParam(value = "lon", required = false) Double lon) {
     if (lat == null || lon == null) {
@@ -31,7 +38,14 @@ public class WeatherController {
     } else if (lon > 180 || lon < -180) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     } else {
-      return ResponseEntity.ok(DiscordWeatherForecastConverter.convert(service.getWeather(lat, lon)));
+      Optional<WeatherForecast> forecast = OneCallResponseMapper.convert(openWeatherService.getWeather(lat, lon));
+      return forecast.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).body(null));
     }
+  }
+
+  @PostMapping("/weather")
+  public void weather(
+      @RequestParam String forecast) {
+    discordService.postContent(forecast);
   }
 }

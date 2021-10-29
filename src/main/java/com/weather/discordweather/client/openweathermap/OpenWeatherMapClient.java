@@ -15,7 +15,7 @@ import java.net.http.HttpResponse;
 @Named
 public class OpenWeatherMapClient {
 
-  public OneCallResponse getWeather(Double lat, Double lon) {
+  public OneCallResponse getWeather(double lat, double lon) {
     HttpClient client = HttpClient.newHttpClient();
 
     HttpRequest request = HttpRequest.newBuilder()
@@ -23,13 +23,13 @@ public class OpenWeatherMapClient {
             String.format("https://api.openweathermap.org/data/2.5/onecall?lat=%s&lon=%s&units=imperial&exclude=minutely&appid=56fa105ab7ae0ad13f69f4587f72065c", lat, lon)))
         .build();
 
-    String responseBody = "";
+    String responseBody;
     try {
       responseBody = client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
           .thenApply(HttpResponse::body)
           .get();
     } catch (Exception e) {
-
+      throw new RuntimeException(e);
     }
 
     ObjectMapper mapper = new ObjectMapper();
