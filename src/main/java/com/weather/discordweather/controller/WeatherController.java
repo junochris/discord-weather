@@ -1,8 +1,7 @@
 package com.weather.discordweather.controller;
 
-import com.weather.discordweather.client.discord.DiscordClient;
-import com.weather.discordweather.client.openweathermap.OpenWeatherMapClient;
-import com.weather.discordweather.client.openweathermap.converter.OneCallResponseMapper;
+import com.weather.discordweather.gateway.WeatherForecastGateway;
+import com.weather.discordweather.model.Geolocation;
 import com.weather.discordweather.model.WeatherForecast;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,15 +15,12 @@ import java.util.Optional;
 
 @RestController
 public class WeatherController {
-  private final DiscordClient discordService;
-  private final OpenWeatherMapClient openWeatherService;
+  private final WeatherForecastGateway gateway;
 
   @Inject
   public WeatherController(
-      DiscordClient ds,
-      OpenWeatherMapClient ws) {
-    discordService = ds;
-    openWeatherService = ws;
+      WeatherForecastGateway gate) {
+    gateway = gate;
   }
 
   @GetMapping("/weather")
@@ -38,7 +34,7 @@ public class WeatherController {
     } else if (lon > 180 || lon < -180) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     } else {
-      Optional<WeatherForecast> forecast = OneCallResponseMapper.convert(openWeatherService.getWeather(lat, lon));
+      Optional<WeatherForecast> forecast = gateway.getWeatherForecast(lat, lon);
       return forecast.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).body(null));
     }
   }
@@ -46,6 +42,31 @@ public class WeatherController {
   @PostMapping("/weather")
   public void weather(
       @RequestParam String forecast) {
-    discordService.postContent(forecast);
+    gateway.postContent(forecast);
+  }
+
+  @GetMapping("/geocode/forward")
+    public ResponseEntity<Geolocation> forwardGeocode(
+        @RequestParam(value = "location", required = false) String location) {
+    if (location.isEmpty()) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+    } else {
+      return gateway.forwardGeocode(location).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).body(null));
+    }
+  }
+
+  @GetMapping("/geocode/reverse")
+  public ResponseEntity<Geolocation> reverseGeocode(
+      @RequestParam(value = "lat", required = false) Double lat,
+      @RequestParam(value = "lon", required = false) Double lon) {
+    if (lat == null || lon == null) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+    } else if (lat > 90 || lat < -90) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+    } else if (lon > 180 || lon < -180) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+    } else {
+      return gateway.reverseGeocode(lat, lon).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).body(null));
+    }
   }
 }

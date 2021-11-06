@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class OneCallResponseMapper {
-  public static Optional<WeatherForecast> convert(OneCallResponse response) {
+  public static Optional<WeatherForecast> convert(OneCallResponse response, String location) {
     if (!response.daily().isEmpty()) {
       DailyWeatherForecast currentDay = response.daily().get(0);
       ZoneOffset timezone = ZoneOffset.ofTotalSeconds(response.timezone_offset());
@@ -54,7 +54,7 @@ public class OneCallResponseMapper {
           }).collect(Collectors.toList());
 
       return Optional.of(new WeatherForecast(
-          "",
+          location,
           LocalDateTime.ofEpochSecond(currentDay.dt(), 0, timezone),
           Optional.of(alerts),
           weatherCondition,
