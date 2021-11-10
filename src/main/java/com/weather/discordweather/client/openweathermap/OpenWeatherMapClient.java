@@ -1,11 +1,10 @@
 package com.weather.discordweather.client.openweathermap;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.weather.discordweather.util.JsonUtils;
 import com.weather.discordweather.client.openweathermap.model.OneCallResponse;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -14,35 +13,44 @@ import java.net.http.HttpResponse;
 
 @Named
 public class OpenWeatherMapClient {
+  private final HttpClient httpClient;
+
+  @Inject
+  public OpenWeatherMapClient() {
+    httpClient = HttpClient.newHttpClient();
+  }
 
   public OneCallResponse getWeather(double lat, double lon) {
-    HttpClient client = HttpClient.newHttpClient();
-
     HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create(
-            String.format("https://api.openweathermap.org/data/2.5/onecall?lat=%s&lon=%s&units=imperial&exclude=minutely&appid=56fa105ab7ae0ad13f69f4587f72065c", lat, lon)))
+        .uri(
+            URI.create(
+              getUriBuilder()
+                .path("/data/2.5/onecall")
+                .queryParam("lat", lat)
+                .queryParam("lon", lon)
+                .queryParam("units", "imperial")
+                .queryParam("exclude", "minutely")
+                .queryParam("appid", "56fa105ab7ae0ad13f69f4587f72065c")
+                  .build()
+                  .toUriString()
+            )
+        )
         .build();
 
-    String responseBody;
     try {
-      responseBody = client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-          .thenApply(HttpResponse::body)
-          .get();
+      return JsonUtils.getObjectFromJsonString(
+          httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+            .thenApply(HttpResponse::body)
+            .get(),
+          OneCallResponse.class);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
 
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.registerModule(new Jdk8Module());
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-    OneCallResponse response;
-    try {
-      response = mapper.readValue(responseBody, OneCallResponse.class);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
-
-    return response;
+  private UriComponentsBuilder getUriBuilder() {
+    return UriComponentsBuilder.newInstance()
+        .scheme("https")
+        .host("api.openweathermap.org");
   }
 }

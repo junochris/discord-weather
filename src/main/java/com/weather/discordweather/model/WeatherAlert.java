@@ -1,7 +1,9 @@
 package com.weather.discordweather.model;
 
+import java.time.LocalDateTime;
+
 public record WeatherAlert(
     String event,
-    String start,
-    String end
+    LocalDateTime start,
+    LocalDateTime end
 ) {}

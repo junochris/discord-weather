@@ -1,10 +1,10 @@
 package com.weather.discordweather.client.mapquest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.weather.discordweather.util.JsonUtils;
 import com.weather.discordweather.client.mapquest.model.GeocodeResponse;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -13,64 +13,64 @@ import java.net.http.HttpResponse;
 
 @Named
 public class MapQuestClient {
-  public GeocodeResponse forwardGeocode(String location) {
-    HttpClient client = HttpClient.newHttpClient();
+  private final HttpClient httpClient;
 
+  @Inject
+  public MapQuestClient() {
+    httpClient = HttpClient.newHttpClient();
+  }
+
+  public GeocodeResponse forwardGeocode(String location) {
     HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create(
-            String.format("http://www.mapquestapi.com/geocoding/v1/reverse?location=%s", location)))
+        .uri(
+            URI.create(
+              getUriBuilder()
+                .path("/geocoding/v1/address")
+                .queryParam("location", location)
+                  .build()
+                  .toUriString()
+            )
+        )
         .build();
 
-    String responseBody;
     try {
-      responseBody = client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-          .thenApply(HttpResponse::body)
-          .get();
+      return JsonUtils.getObjectFromJsonString(
+          httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+              .thenApply(HttpResponse::body)
+              .get(),
+          GeocodeResponse.class);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-    GeocodeResponse response;
-    try {
-      response = mapper.readValue(responseBody, GeocodeResponse.class);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
-
-    return response;
   }
 
   public GeocodeResponse reverseGeocode(double lat, double lon) {
-    HttpClient client = HttpClient.newHttpClient();
-
-    String location = String.format("%s,%s", lat, lon);
     HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create(
-            String.format("http://www.mapquestapi.com/geocoding/v1/reverse?%s", location)))
+        .uri(
+            URI.create(
+              getUriBuilder()
+                .path("/geocoding/v1/reverse")
+                .queryParam("location", String.format("%s,%s", lat, lon))
+                  .build()
+                  .toUriString()
+            )
+        )
         .build();
 
-    String responseBody;
     try {
-      responseBody = client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-          .thenApply(HttpResponse::body)
-          .get();
+      return JsonUtils.getObjectFromJsonString(
+          httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+              .thenApply(HttpResponse::body)
+              .get(),
+          GeocodeResponse.class);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
 
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-    GeocodeResponse response;
-    try {
-      response = mapper.readValue(responseBody, GeocodeResponse.class);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
-
-    return response;
+  private UriComponentsBuilder getUriBuilder() {
+    return UriComponentsBuilder.newInstance()
+        .scheme("http")
+        .host("www.mapquestapi.com");
   }
 }

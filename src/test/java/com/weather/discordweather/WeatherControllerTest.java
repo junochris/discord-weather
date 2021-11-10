@@ -1,17 +1,16 @@
 package com.weather.discordweather;
 
-import com.weather.discordweather.client.mapquest.converter.GeocodeResponseMapper;
 import com.weather.discordweather.client.mapquest.model.Coordinate;
 import com.weather.discordweather.client.mapquest.model.GeocodeResponse;
 import com.weather.discordweather.client.mapquest.model.GeocodeResult;
 import com.weather.discordweather.client.mapquest.model.Geolocation;
-import com.weather.discordweather.client.openweathermap.converter.OneCallResponseMapper;
 import com.weather.discordweather.client.openweathermap.model.CurrentWeatherForecast;
 import com.weather.discordweather.client.openweathermap.model.DailyWeatherForecast;
 import com.weather.discordweather.client.openweathermap.model.OneCallResponse;
 import com.weather.discordweather.client.openweathermap.model.TemperatureForecast;
 import com.weather.discordweather.client.openweathermap.model.WeatherCondition;
 import com.weather.discordweather.controller.WeatherController;
+import com.weather.discordweather.converter.WeatherForecastMapper;
 import com.weather.discordweather.gateway.WeatherForecastGateway;
 import com.weather.discordweather.model.WeatherForecast;
 import org.junit.jupiter.api.AfterEach;
@@ -53,61 +52,55 @@ public class WeatherControllerTest {
   @DisplayName("getWeather")
   public class GetWeatherSuite {
     @Test
-    @DisplayName("returns an error if the latitude is missing")
+    @DisplayName("returns a 400 Bad Request if the latitude is missing")
     public void getWeatherMissingLat() {
-      var controller = new WeatherController(gateway);
-      var missingLat = controller.weather(null, -100.0);
+      var missingLat = new WeatherController(gateway).weather(null, -100.0);
       Mockito.verifyNoInteractions(gateway);
       assertThat(missingLat.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    @DisplayName("returns an error if the longitude is missing")
+    @DisplayName("returns a 400 Bad Request if the longitude is missing")
     public void getWeatherMissingLong() {
-      var controller = new WeatherController(gateway);
-      var missingLong = controller.weather(33.0, null);
+      var missingLong = new WeatherController(gateway).weather(33.0, null);
       Mockito.verifyNoInteractions(gateway);
       assertThat(missingLong.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    @DisplayName("returns an error if both latitude and longitude are missing")
+    @DisplayName("returns a 400 Bad Request if both latitude and longitude are missing")
     public void getWeatherMissingBoth() {
-      var controller = new WeatherController(gateway);
-      var missingBoth = controller.weather(null, null);
+      var missingBoth = new WeatherController(gateway).weather(null, null);
       Mockito.verifyNoInteractions(gateway);
       assertThat(missingBoth.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    @DisplayName("returns an error if the latitude is invalid")
+    @DisplayName("returns a 400 Bad Request if the latitude is invalid")
     public void getWeatherInvalidLatitude() {
-      var controller = new WeatherController(gateway);
-      var response = controller.weather(91.0, 150.0);
+      var response = new WeatherController(gateway).weather(91.0, 150.0);
       Mockito.verifyNoInteractions(gateway);
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    @DisplayName("returns an error if the longitude is invalid")
+    @DisplayName("returns a 400 Bad Request if the longitude is invalid")
     public void getWeatherInvalidLongitude() {
-      var controller = new WeatherController(gateway);
-      var response = controller.weather(50.0, 190.0);
+      var response = new WeatherController(gateway).weather(50.0, 190.0);
       Mockito.verifyNoInteractions(gateway);
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    @DisplayName("returns an error if both latitude and longitude are invalid")
+    @DisplayName("returns a 400 Bad Request if both latitude and longitude are invalid")
     public void getWeatherInvalidBoth() {
-      var controller = new WeatherController(gateway);
-      var response = controller.weather(100.0, 190.0);
+      var response = new WeatherController(gateway).weather(100.0, 190.0);
       Mockito.verifyNoInteractions(gateway);
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    @DisplayName("returns OK if latitude and longitude are valid")
+    @DisplayName("returns a 200 OK if latitude and longitude are valid")
     public void getWeatherValid() {
       OneCallResponse callResponse = new OneCallResponse(
           1,
@@ -122,7 +115,19 @@ public class WeatherControllerTest {
               36,
               List.of(new WeatherCondition("Clear", "clear sky")),
               Optional.of(Collections.emptyList()))));
-      Optional<WeatherForecast> forecast = OneCallResponseMapper.convert(callResponse, "Detroit, MI");
+
+      GeocodeResponse geocodeResponse = new GeocodeResponse(
+          List.of(new GeocodeResult(
+              List.of(new Geolocation(
+                  "Detroit",
+                  "MI",
+                  "US",
+                  new Coordinate(100.0, -100.0)
+              ))
+          ))
+      );
+
+      Optional<WeatherForecast> forecast = WeatherForecastMapper.fromOpenWeatherMapAndMapQuest(callResponse, geocodeResponse);
       assertThat(forecast).isNotEmpty();
       Mockito.when(gateway.getWeatherForecast(33.0, 80.0)).thenReturn(forecast);
       var controller = new WeatherController(gateway);
@@ -136,61 +141,55 @@ public class WeatherControllerTest {
   @DisplayName("reverseGeocode")
   public class ReverseGeocodeSuite {
     @Test
-    @DisplayName("returns an error if latitude is missing")
+    @DisplayName("returns a 400 Bad Request if latitude is missing")
     public void reverseGeocodeMissingLat() {
-      var controller = new WeatherController(gateway);
-      var missingLat = controller.weather(null, -100.0);
+      var missingLat = new WeatherController(gateway).reverseGeocode(null, -100.0);
       Mockito.verifyNoInteractions(gateway);
       assertThat(missingLat.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    @DisplayName("returns an error if the longitude is missing")
+    @DisplayName("returns a 400 Bad Request if the longitude is missing")
     public void reverseGeocodeMissingLong() {
-      var controller = new WeatherController(gateway);
-      var missingLong = controller.weather(33.0, null);
+      var missingLong = new WeatherController(gateway).reverseGeocode(33.0, null);
       Mockito.verifyNoInteractions(gateway);
       assertThat(missingLong.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    @DisplayName("returns an error if both latitude and longitude are missing")
+    @DisplayName("returns a 400 Bad Request if both latitude and longitude are missing")
     public void reverseGeocodeMissingBoth() {
-      var controller = new WeatherController(gateway);
-      var missingBoth = controller.weather(null, null);
+      var missingBoth = new WeatherController(gateway).reverseGeocode(null, null);
       Mockito.verifyNoInteractions(gateway);
       assertThat(missingBoth.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    @DisplayName("returns an error if the latitude is invalid")
+    @DisplayName("returns a 400 Bad Request if the latitude is invalid")
     public void reverseGeocodeInvalidLatitude() {
-      var controller = new WeatherController(gateway);
-      var response = controller.weather(91.0, 150.0);
+      var response = new WeatherController(gateway).reverseGeocode(91.0, 150.0);
       Mockito.verifyNoInteractions(gateway);
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    @DisplayName("returns an error if the longitude is invalid")
+    @DisplayName("returns a 400 Bad Request if the longitude is invalid")
     public void reverseGeocodeInvalidLongitude() {
-      var controller = new WeatherController(gateway);
-      var response = controller.weather(50.0, 190.0);
+      var response = new WeatherController(gateway).reverseGeocode(50.0, 190.0);
       Mockito.verifyNoInteractions(gateway);
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    @DisplayName("returns an error if both latitude and longitude are invalid")
+    @DisplayName("returns a 400 Bad Request if both latitude and longitude are invalid")
     public void reverseGeocodeInvalidBoth() {
-      var controller = new WeatherController(gateway);
-      var response = controller.weather(100.0, 190.0);
+      var response = new WeatherController(gateway).reverseGeocode(100.0, 190.0);
       Mockito.verifyNoInteractions(gateway);
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    @DisplayName("returns OK if latitude and longitude are valid")
+    @DisplayName("returns a 200 OK if latitude and longitude are valid")
     public void reverseGeocodeValid() {
       GeocodeResponse geocodeResponse = new GeocodeResponse(
           List.of(new GeocodeResult(
@@ -201,13 +200,11 @@ public class WeatherControllerTest {
                   new Coordinate(33.0f, 80.0f)))
           ))
       );
-      Optional<com.weather.discordweather.model.Geolocation> location = GeocodeResponseMapper.convert(geocodeResponse);
-      assertThat(location).isNotEmpty();
-      Mockito.when(gateway.reverseGeocode(33.0, 80.0)).thenReturn(location);
+      Mockito.when(gateway.reverseGeocode(33.0, 80.0)).thenReturn(geocodeResponse);
       var controller = new WeatherController(gateway);
       var response = controller.reverseGeocode(33.0, 80.0);
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-      assertThat(response.getBody()).isEqualTo(location.get());
+      assertThat(response.getBody()).isEqualTo(geocodeResponse);
     }
   }
 }

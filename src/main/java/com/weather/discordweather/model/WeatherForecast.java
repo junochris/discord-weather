@@ -2,13 +2,12 @@ package com.weather.discordweather.model;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public record WeatherForecast(
     String location,
     LocalDateTime date,
 
-    Optional<List<WeatherAlert>> alerts,
+    List<WeatherAlert> alerts,
 
     String weatherCondition,
     float highTemp,
