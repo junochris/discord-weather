@@ -106,15 +106,19 @@ public class WeatherControllerTest {
           1,
           new CurrentWeatherForecast(1635447600, 1635429842, 1635469291, 63.9f, 59,
               List.of(new WeatherCondition("Clear", "clear sky")),
-              Collections.emptyList()),
+              Collections.emptyList()
+          ),
           Collections.emptyList(),
-          List.of(new DailyWeatherForecast(1635447600,
+          List.of(new DailyWeatherForecast(
+              1635447600,
               1635429842,
               1635469291,
               new TemperatureForecast(76.93f, 63.9f),
               36,
               List.of(new WeatherCondition("Clear", "clear sky")),
-              Optional.of(Collections.emptyList()))));
+              Optional.of(Collections.emptyList())
+          ))
+      );
 
       GeocodeResponse geocodeResponse = new GeocodeResponse(
           List.of(new GeocodeResult(
@@ -127,7 +131,10 @@ public class WeatherControllerTest {
           ))
       );
 
-      Optional<WeatherForecast> forecast = WeatherForecastMapper.fromOpenWeatherMapAndMapQuest(callResponse, geocodeResponse);
+      Optional<WeatherForecast> forecast = WeatherForecastMapper.fromOpenWeatherMapAndMapQuest(
+          callResponse,
+          geocodeResponse
+      );
       assertThat(forecast).isNotEmpty();
       Mockito.when(gateway.getWeatherForecast(33.0, 80.0)).thenReturn(forecast);
       var controller = new WeatherController(gateway);
@@ -197,7 +204,8 @@ public class WeatherControllerTest {
                   "Detroit",
                   "MI",
                   "US",
-                  new Coordinate(33.0f, 80.0f)))
+                  new Coordinate(33.0f, 80.0f)
+              ))
           ))
       );
       Mockito.when(gateway.reverseGeocode(33.0, 80.0)).thenReturn(geocodeResponse);

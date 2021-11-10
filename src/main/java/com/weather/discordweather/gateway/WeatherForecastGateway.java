@@ -22,7 +22,8 @@ public class WeatherForecastGateway {
   public WeatherForecastGateway(
       DiscordClient dc,
       MapQuestClient mc,
-      OpenWeatherMapClient wc) {
+      OpenWeatherMapClient wc
+  ) {
     discordClient = dc;
     mapQuestClient = mc;
     openWeatherClient = wc;
@@ -31,7 +32,10 @@ public class WeatherForecastGateway {
   public Optional<WeatherForecast> getWeatherForecast(double lat, double lon) {
     OneCallResponse openWeatherResponse = openWeatherClient.getWeather(lat, lon);
     GeocodeResponse mapQuestResponse = mapQuestClient.reverseGeocode(lat, lon);
-    return WeatherForecastMapper.fromOpenWeatherMapAndMapQuest(openWeatherResponse, mapQuestResponse);
+    return WeatherForecastMapper.fromOpenWeatherMapAndMapQuest(
+        openWeatherResponse,
+        mapQuestResponse
+    );
   }
 
   public GeocodeResponse forwardGeocode(String location) {
@@ -46,6 +50,7 @@ public class WeatherForecastGateway {
     return discordClient.executeWebhook(
         "896866700702662697",
         "qcvv8ihtrGTPjZswASiJaOsy-qMua58DkgAb-XA39WAG5D1FxFDz1EGJ53FavFz-GjTE",
-        forecast);
+        forecast
+    );
   }
 }

@@ -42,24 +42,20 @@ public class WeatherController {
   }
 
   @GetMapping("/geocode/forward")
-    public ResponseEntity<GeocodeResponse> forwardGeocode(
-        @RequestParam(value = "location", required = false) String location) {
-    if (location.isEmpty()) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-    } else {
-      return ResponseEntity.ok(gateway.forwardGeocode(location));
-    }
+  public ResponseEntity<GeocodeResponse> forwardGeocode(
+      @RequestParam(value = "location", required = false) String location) {
+    return location.isEmpty()
+        ? ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+        : ResponseEntity.ok(gateway.forwardGeocode(location));
   }
 
   @GetMapping("/geocode/reverse")
   public ResponseEntity<GeocodeResponse> reverseGeocode(
       @RequestParam(value = "lat", required = false) Double lat,
       @RequestParam(value = "lon", required = false) Double lon) {
-    if (isInvalidLatitude(lat) || isInvalidLongitude(lon)) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-    } else {
-      return ResponseEntity.ok(gateway.reverseGeocode(lat, lon));
-    }
+    return isInvalidLatitude(lat) || isInvalidLongitude(lon)
+        ? ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+        : ResponseEntity.ok(gateway.reverseGeocode(lat, lon));
   }
 
   private boolean isInvalidLatitude(Double lat) {

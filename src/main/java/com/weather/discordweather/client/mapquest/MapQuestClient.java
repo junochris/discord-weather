@@ -2,6 +2,7 @@ package com.weather.discordweather.client.mapquest;
 
 import com.weather.discordweather.util.JsonUtils;
 import com.weather.discordweather.client.mapquest.model.GeocodeResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.inject.Inject;
@@ -13,22 +14,24 @@ import java.net.http.HttpResponse;
 
 @Named
 public class MapQuestClient {
+
+  @Autowired
   private final HttpClient httpClient;
 
   @Inject
-  public MapQuestClient() {
-    httpClient = HttpClient.newHttpClient();
+  public MapQuestClient(HttpClient client) {
+    httpClient = client;
   }
 
   public GeocodeResponse forwardGeocode(String location) {
     HttpRequest request = HttpRequest.newBuilder()
         .uri(
             URI.create(
-              getUriBuilder()
-                .path("/geocoding/v1/address")
-                .queryParam("location", location)
-                  .build()
-                  .toUriString()
+                getUriBuilder()
+                    .path("/geocoding/v1/address")
+                    .queryParam("location", location)
+                    .build()
+                    .toUriString()
             )
         )
         .build();
@@ -38,7 +41,8 @@ public class MapQuestClient {
           httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
               .thenApply(HttpResponse::body)
               .get(),
-          GeocodeResponse.class);
+          GeocodeResponse.class
+      );
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -48,11 +52,11 @@ public class MapQuestClient {
     HttpRequest request = HttpRequest.newBuilder()
         .uri(
             URI.create(
-              getUriBuilder()
-                .path("/geocoding/v1/reverse")
-                .queryParam("location", String.format("%s,%s", lat, lon))
-                  .build()
-                  .toUriString()
+                getUriBuilder()
+                    .path("/geocoding/v1/reverse")
+                    .queryParam("location", String.format("%s,%s", lat, lon))
+                    .build()
+                    .toUriString()
             )
         )
         .build();
@@ -62,7 +66,8 @@ public class MapQuestClient {
           httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
               .thenApply(HttpResponse::body)
               .get(),
-          GeocodeResponse.class);
+          GeocodeResponse.class
+      );
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
