@@ -19,31 +19,39 @@ public class WeatherController {
 
   @Inject
   public WeatherController(
-      WeatherForecastGateway gateway) {
+      WeatherForecastGateway gateway
+  ) {
     this.gateway = gateway;
   }
 
   @GetMapping("/weather")
   public ResponseEntity<WeatherForecast> weather(
       @RequestParam(value = "lat", required = false) Double lat,
-      @RequestParam(value = "lon", required = false) Double lon) {
+      @RequestParam(value = "lon", required = false) Double lon
+  ) {
     if (isInvalidLatitude(lat) || isInvalidLongitude(lon)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     } else {
       Optional<WeatherForecast> forecast = gateway.getWeatherForecast(lat, lon);
-      return forecast.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).body(null));
+      return forecast.map(ResponseEntity::ok)
+          .orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).body(null));
     }
   }
 
   @PostMapping("/weather")
-  public ResponseEntity<String> weather(
-      @RequestParam String forecast) {
-    return ResponseEntity.ok(gateway.executeWebhook(forecast));
+  public ResponseEntity<String> postWeather(
+      @RequestParam(value = "lat", required = false) Double lat,
+      @RequestParam(value = "lon", required = false) Double lon
+  ) {
+    Optional<WeatherForecast> forecast = gateway.getWeatherForecast(lat, lon);
+    return forecast.map(weatherForecast -> ResponseEntity.ok(gateway.executeWebhook(weatherForecast.toDiscordString())))
+        .orElseGet(() -> ResponseEntity.ok(null));
   }
 
   @GetMapping("/geocode/forward")
   public ResponseEntity<GeocodeResponse> forwardGeocode(
-      @RequestParam(value = "location", required = false) String location) {
+      @RequestParam(value = "location", required = false) String location
+  ) {
     return location.isEmpty()
         ? ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         : ResponseEntity.ok(gateway.forwardGeocode(location));
@@ -52,7 +60,8 @@ public class WeatherController {
   @GetMapping("/geocode/reverse")
   public ResponseEntity<GeocodeResponse> reverseGeocode(
       @RequestParam(value = "lat", required = false) Double lat,
-      @RequestParam(value = "lon", required = false) Double lon) {
+      @RequestParam(value = "lon", required = false) Double lon
+  ) {
     return isInvalidLatitude(lat) || isInvalidLongitude(lon)
         ? ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         : ResponseEntity.ok(gateway.reverseGeocode(lat, lon));

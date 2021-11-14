@@ -19,6 +19,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static java.lang.Math.round;
+
 public class WeatherForecastMapper {
 
   private static final int THREE_HOURS = 3;
@@ -43,7 +45,7 @@ public class WeatherForecastMapper {
             geocodeLocation.adminArea5(),
             geocodeLocation.adminArea1().equalsIgnoreCase("US")
                 ? geocodeLocation.adminArea3()
-                : geocodeLocation.adminArea5()
+                : geocodeLocation.adminArea1()
         );
       }
     }
@@ -62,9 +64,18 @@ public class WeatherForecastMapper {
           )).collect(Collectors.toUnmodifiableList());
     }
 
-    String weatherCondition = currentDay.weather().isEmpty()
-        ? ""
-        : currentDay.weather().get(0).description();
+    // Default id is clear sky
+    int weatherId = 800;
+    String weatherCondition = "";
+    if (currentDay.weather().size() > 0) {
+      weatherId = currentDay.weather().get(0).id();
+      weatherCondition = currentDay.weather().get(0).description();
+      if (!weatherCondition.isEmpty()) {
+        // Capitalize the first letter
+        weatherCondition = weatherCondition.substring(0, 1)
+            .toUpperCase() + weatherCondition.substring(1);
+      }
+    }
 
     // Collect the next 6 temperatures in 3 hour intervals.
     List<WeatherRecord> records = IntStream
@@ -74,7 +85,11 @@ public class WeatherForecastMapper {
           HourlyWeatherForecast hour = weather.hourly().get(i);
           return new WeatherRecord(
               LocalDateTime.ofEpochSecond(hour.dt(), 0, timezone),
-              new WeatherCondition(hour.weather().get(0).main(), hour.temp())
+              new WeatherCondition(
+                  hour.weather().get(0).id(),
+                  hour.weather().get(0).description(),
+                  round(hour.temp())
+              )
           );
         }).collect(Collectors.toUnmodifiableList());
 
@@ -83,9 +98,9 @@ public class WeatherForecastMapper {
             location,
             LocalDateTime.ofEpochSecond(currentDay.dt(), 0, timezone),
             alerts,
-            weatherCondition,
-            currentDay.temp().max(),
-            currentDay.temp().min(),
+            new WeatherCondition(weatherId, weatherCondition, 0),
+            round(currentDay.temp().max()),
+            round(currentDay.temp().min()),
             currentDay.humidity(),
             LocalDateTime.ofEpochSecond(currentDay.sunrise(), 0, timezone),
             LocalDateTime.ofEpochSecond(currentDay.sunset(), 0, timezone),

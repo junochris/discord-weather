@@ -1,6 +1,6 @@
 package com.weather.discordweather.client.openweathermap.model;
 
 public record WeatherCondition(
-    String main,
+    int id,
     String description
 ) {}

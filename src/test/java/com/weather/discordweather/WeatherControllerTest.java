@@ -105,7 +105,7 @@ public class WeatherControllerTest {
       OneCallResponse callResponse = new OneCallResponse(
           1,
           new CurrentWeatherForecast(1635447600, 1635429842, 1635469291, 63.9f, 59,
-              List.of(new WeatherCondition("Clear", "clear sky")),
+              List.of(new WeatherCondition(800, "clear sky")),
               Collections.emptyList()
           ),
           Collections.emptyList(),
@@ -115,7 +115,7 @@ public class WeatherControllerTest {
               1635469291,
               new TemperatureForecast(76.93f, 63.9f),
               36,
-              List.of(new WeatherCondition("Clear", "clear sky")),
+              List.of(new WeatherCondition(800, "clear sky")),
               Optional.of(Collections.emptyList())
           ))
       );
