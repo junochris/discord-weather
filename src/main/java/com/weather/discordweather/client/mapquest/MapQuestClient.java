@@ -1,7 +1,8 @@
 package com.weather.discordweather.client.mapquest;
 
-import com.weather.discordweather.util.JsonUtils;
 import com.weather.discordweather.client.mapquest.model.GeocodeResponse;
+import com.weather.discordweather.util.FileUtils;
+import com.weather.discordweather.util.JsonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -17,6 +18,7 @@ public class MapQuestClient {
 
   @Autowired
   private final HttpClient httpClient;
+  private final String apiKeyLocation = "src/main/resources/MapQuestApiKey.txt";
 
   @Inject
   public MapQuestClient(HttpClient client) {
@@ -29,6 +31,7 @@ public class MapQuestClient {
             URI.create(
                 getUriBuilder()
                     .path("/geocoding/v1/address")
+                    .queryParam("key", FileUtils.getFileContents(apiKeyLocation))
                     .queryParam("location", location)
                     .build()
                     .toUriString()
@@ -54,6 +57,7 @@ public class MapQuestClient {
             URI.create(
                 getUriBuilder()
                     .path("/geocoding/v1/reverse")
+                    .queryParam("key", FileUtils.getFileContents(apiKeyLocation))
                     .queryParam("location", String.format("%s,%s", lat, lon))
                     .build()
                     .toUriString()

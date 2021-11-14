@@ -1,5 +1,6 @@
 package com.weather.discordweather.client.openweathermap;
 
+import com.weather.discordweather.util.FileUtils;
 import com.weather.discordweather.util.JsonUtils;
 import com.weather.discordweather.client.openweathermap.model.OneCallResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ public class OpenWeatherMapClient {
 
   @Autowired
   private final HttpClient httpClient;
+  private final String apiKeyLocation = "src/main/resources/OneCallApiKey.txt";
 
   @Inject
   public OpenWeatherMapClient(HttpClient client) {
@@ -33,7 +35,7 @@ public class OpenWeatherMapClient {
                     .queryParam("lon", lon)
                     .queryParam("units", "imperial")
                     .queryParam("exclude", "minutely")
-                    .queryParam("appid", "56fa105ab7ae0ad13f69f4587f72065c")
+                    .queryParam("appid", FileUtils.getFileContents(apiKeyLocation))
                     .build()
                     .toUriString()
             )
