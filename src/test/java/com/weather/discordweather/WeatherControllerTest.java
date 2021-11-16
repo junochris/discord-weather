@@ -1,5 +1,7 @@
 package com.weather.discordweather;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.weather.discordweather.client.mapquest.model.Coordinate;
 import com.weather.discordweather.client.mapquest.model.GeocodeResponse;
 import com.weather.discordweather.client.mapquest.model.GeocodeResult;
@@ -13,6 +15,9 @@ import com.weather.discordweather.controller.WeatherController;
 import com.weather.discordweather.converter.WeatherForecastMapper;
 import com.weather.discordweather.gateway.WeatherForecastGateway;
 import com.weather.discordweather.model.WeatherForecast;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,12 +29,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 public class WeatherControllerTest {
@@ -51,6 +50,7 @@ public class WeatherControllerTest {
   @Nested
   @DisplayName("getWeather")
   public class GetWeatherSuite {
+
     @Test
     @DisplayName("returns a 400 Bad Request if the latitude is missing")
     public void getWeatherMissingLat() {
@@ -147,6 +147,7 @@ public class WeatherControllerTest {
   @Nested
   @DisplayName("reverseGeocode")
   public class ReverseGeocodeSuite {
+
     @Test
     @DisplayName("returns a 400 Bad Request if latitude is missing")
     public void reverseGeocodeMissingLat() {

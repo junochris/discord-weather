@@ -1,5 +1,7 @@
 package com.weather.discordweather.converter;
 
+import static java.lang.Math.round;
+
 import com.weather.discordweather.client.mapquest.model.GeocodeResponse;
 import com.weather.discordweather.client.mapquest.model.GeocodeResult;
 import com.weather.discordweather.client.mapquest.model.Geolocation;
@@ -10,7 +12,6 @@ import com.weather.discordweather.model.WeatherAlert;
 import com.weather.discordweather.model.WeatherCondition;
 import com.weather.discordweather.model.WeatherForecast;
 import com.weather.discordweather.model.WeatherRecord;
-
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -19,12 +20,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static java.lang.Math.round;
-
 public class WeatherForecastMapper {
 
   private static final int THREE_HOURS = 3;
   private static final int EIGHTEEN_HOURS = 18;
+  private static final int DEFAULT_WEATHER_ID = 800; // Clear sky
 
   public static Optional<WeatherForecast> fromOpenWeatherMapAndMapQuest(
       OneCallResponse weather,
@@ -64,16 +64,13 @@ public class WeatherForecastMapper {
           )).collect(Collectors.toUnmodifiableList());
     }
 
-    // Default id is clear sky
-    int weatherId = 800;
+    int weatherId = DEFAULT_WEATHER_ID;
     String weatherCondition = "";
-    if (currentDay.weather().size() > 0) {
+    if (!currentDay.weather().isEmpty()) {
       weatherId = currentDay.weather().get(0).id();
       weatherCondition = currentDay.weather().get(0).description();
       if (!weatherCondition.isEmpty()) {
-        // Capitalize the first letter
-        weatherCondition = weatherCondition.substring(0, 1)
-            .toUpperCase() + weatherCondition.substring(1);
+        weatherCondition = capitalizeFirstLetter(weatherCondition);
       }
     }
 
@@ -107,5 +104,10 @@ public class WeatherForecastMapper {
             records
         )
     );
+  }
+
+  private static String capitalizeFirstLetter(String description) {
+    return description.substring(0, 1)
+        .toUpperCase() + description.substring(1);
   }
 }
