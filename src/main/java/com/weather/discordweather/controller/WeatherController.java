@@ -4,15 +4,13 @@ import com.weather.discordweather.client.mapquest.model.GeocodeResponse;
 import com.weather.discordweather.formatter.WeatherForecastFormatter;
 import com.weather.discordweather.gateway.WeatherForecastGateway;
 import com.weather.discordweather.model.WeatherForecast;
+import javax.inject.Inject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.inject.Inject;
-import java.util.Optional;
 
 @RestController
 public class WeatherController {
@@ -34,7 +32,9 @@ public class WeatherController {
     if (isInvalidLatitude(lat) || isInvalidLongitude(lon)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     } else {
-      return gateway.getWeatherForecast(lat, lon).map(ResponseEntity::ok)
+      return gateway
+          .getWeatherForecast(lat, lon)
+          .map(ResponseEntity::ok)
           .orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).body(null));
     }
   }
@@ -44,8 +44,8 @@ public class WeatherController {
       @RequestParam(value = "lat", required = false) Double lat,
       @RequestParam(value = "lon", required = false) Double lon
   ) {
-    Optional<WeatherForecast> forecast = gateway.getWeatherForecast(lat, lon);
-    return forecast.map(weatherForecast -> ResponseEntity.ok(
+    return gateway.getWeatherForecast(lat, lon)
+        .map(weatherForecast -> ResponseEntity.ok(
             gateway.executeWebhook(WeatherForecastFormatter.toDiscordString(weatherForecast))))
         .orElseGet(() -> ResponseEntity.ok(null));
   }

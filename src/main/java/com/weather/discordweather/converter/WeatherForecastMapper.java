@@ -24,7 +24,8 @@ public class WeatherForecastMapper {
 
   private static final int THREE_HOURS = 3;
   private static final int EIGHTEEN_HOURS = 18;
-  private static final int DEFAULT_WEATHER_ID = 800; // Clear sky
+  private static final int WEATHER_ID_CLEAR_SKY = 800;
+  private static final int DEFAULT_WEATHER_ID = WEATHER_ID_CLEAR_SKY;
 
   public static Optional<WeatherForecast> fromOpenWeatherMapAndMapQuest(
       OneCallResponse weather,
@@ -34,52 +35,54 @@ public class WeatherForecastMapper {
       return Optional.empty();
     }
 
-    // Get the location from the GeocodeResponse
-    String location = "";
-    if (!geolocation.results().isEmpty()) {
-      GeocodeResult result = geolocation.results().get(0);
-      if (!result.locations().isEmpty()) {
-        Geolocation geocodeLocation = result.locations().get(0);
-        location = String.format(
-            "%s, %s",
-            geocodeLocation.adminArea5(),
-            geocodeLocation.adminArea1().equalsIgnoreCase("US")
-                ? geocodeLocation.adminArea3()
-                : geocodeLocation.adminArea1()
-        );
-      }
-    }
-
     DailyWeatherForecast currentDay = weather.daily().get(0);
     ZoneOffset timezone = ZoneOffset.ofTotalSeconds(weather.timezone_offset());
 
-    // Collect alerts
-    List<WeatherAlert> alerts = Collections.emptyList();
-    if (currentDay.alerts().isPresent()) {
-      alerts = currentDay.alerts().get().stream().map(
+    return Optional.of(
+        new WeatherForecast(
+            getLocation(geolocation),
+            LocalDateTime.ofEpochSecond(currentDay.dt(), 0, timezone),
+            collectAlerts(currentDay, timezone),
+            getCurrentWeatherCondition(currentDay),
+            round(currentDay.temp().max()),
+            round(currentDay.temp().min()),
+            currentDay.humidity(),
+            LocalDateTime.ofEpochSecond(currentDay.sunrise(), 0, timezone),
+            LocalDateTime.ofEpochSecond(currentDay.sunset(), 0, timezone),
+            collectNext6TemperaturesEvery3Hours(weather.hourly(), timezone)
+        )
+    );
+  }
+
+  private static String capitalizeFirstLetter(String description) {
+    return description.substring(0, 1)
+        .toUpperCase() + description.substring(1);
+  }
+
+  private static List<WeatherAlert> collectAlerts(
+      DailyWeatherForecast forecast,
+      ZoneOffset timezone
+  ) {
+    if (forecast.alerts().isPresent()) {
+      return forecast.alerts().get().stream().map(
           alert -> new com.weather.discordweather.model.WeatherAlert(
               alert.event(),
               LocalDateTime.ofEpochSecond(alert.start(), 0, timezone),
               LocalDateTime.ofEpochSecond(alert.end(), 0, timezone)
           )).collect(Collectors.toUnmodifiableList());
     }
+    return Collections.emptyList();
+  }
 
-    int weatherId = DEFAULT_WEATHER_ID;
-    String weatherCondition = "";
-    if (!currentDay.weather().isEmpty()) {
-      weatherId = currentDay.weather().get(0).id();
-      weatherCondition = currentDay.weather().get(0).description();
-      if (!weatherCondition.isEmpty()) {
-        weatherCondition = capitalizeFirstLetter(weatherCondition);
-      }
-    }
-
-    // Collect the next 6 temperatures in 3 hour intervals.
-    List<WeatherRecord> records = IntStream
+  private static List<WeatherRecord> collectNext6TemperaturesEvery3Hours(
+      List<HourlyWeatherForecast> hourlyWeatherForecasts,
+      ZoneOffset timezone
+  ) {
+    return IntStream
         .range(0, EIGHTEEN_HOURS)
-        .filter(i -> i % THREE_HOURS == 0 && i < weather.hourly().size())
+        .filter(i -> i % THREE_HOURS == 0 && i < hourlyWeatherForecasts.size())
         .mapToObj(i -> {
-          HourlyWeatherForecast hour = weather.hourly().get(i);
+          HourlyWeatherForecast hour = hourlyWeatherForecasts.get(i);
           return new WeatherRecord(
               LocalDateTime.ofEpochSecond(hour.dt(), 0, timezone),
               new WeatherCondition(
@@ -89,25 +92,35 @@ public class WeatherForecastMapper {
               )
           );
         }).collect(Collectors.toUnmodifiableList());
-
-    return Optional.of(
-        new WeatherForecast(
-            location,
-            LocalDateTime.ofEpochSecond(currentDay.dt(), 0, timezone),
-            alerts,
-            new WeatherCondition(weatherId, weatherCondition, 0),
-            round(currentDay.temp().max()),
-            round(currentDay.temp().min()),
-            currentDay.humidity(),
-            LocalDateTime.ofEpochSecond(currentDay.sunrise(), 0, timezone),
-            LocalDateTime.ofEpochSecond(currentDay.sunset(), 0, timezone),
-            records
-        )
-    );
   }
 
-  private static String capitalizeFirstLetter(String description) {
-    return description.substring(0, 1)
-        .toUpperCase() + description.substring(1);
+  private static WeatherCondition getCurrentWeatherCondition(DailyWeatherForecast currentDay) {
+    int weatherId = DEFAULT_WEATHER_ID;
+    String weatherCondition = "";
+    if (!currentDay.weather().isEmpty()) {
+      weatherId = currentDay.weather().get(0).id();
+      weatherCondition = currentDay.weather().get(0).description();
+      if (!weatherCondition.isEmpty()) {
+        weatherCondition = capitalizeFirstLetter(weatherCondition);
+      }
+    }
+    return new WeatherCondition(weatherId, weatherCondition, 0);
+  }
+
+  private static String getLocation(GeocodeResponse response) {
+    if (!response.results().isEmpty()) {
+      GeocodeResult result = response.results().get(0);
+      if (!result.locations().isEmpty()) {
+        Geolocation geolocation = result.locations().get(0);
+        return String.format(
+            "%s, %s",
+            geolocation.adminArea5(),
+            geolocation.adminArea1().equalsIgnoreCase("US")
+                ? geolocation.adminArea3()
+                : geolocation.adminArea1()
+        );
+      }
+    }
+    return "";
   }
 }

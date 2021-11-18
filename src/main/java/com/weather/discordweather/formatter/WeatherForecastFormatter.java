@@ -28,8 +28,10 @@ public class WeatherForecastFormatter {
 
     discordString.append(getFormattedDailyForecast(forecast));
 
-    forecast.weatherRecords().forEach(weatherRecord -> discordString
-        .append(getFormattedHourlyForecast(weatherRecord, forecast)));
+    forecast
+        .weatherRecords()
+        .stream().map(weatherRecord -> getFormattedHourlyForecast(weatherRecord, forecast))
+        .forEach(discordString::append);
 
     return discordString.toString();
   }
@@ -113,7 +115,7 @@ public class WeatherForecastFormatter {
    * @param forecast The forecast for the day
    * @return A String in the format:
    * Time | Temp. #  6 AM | 60F
-   * <p>
+   *
    * The time is padded to align single digit times with double-digit times.
    */
   private static String getFormattedHourlyForecast(WeatherRecord record, WeatherForecast forecast) {
@@ -143,25 +145,24 @@ public class WeatherForecastFormatter {
   private static String getWeatherEmoji(WeatherCondition weather, boolean isDaytime) {
     // Thunderstorm
     if (weather.id() >= 200 && weather.id() < 300) {
-      if (weather.id() >= 210 && weather.id() < 230) {
-        return WeatherEmoji.CLOUD_LIGHTNING.getEmoji();
-      }
-      return WeatherEmoji.THUNDER_CLOUD_RAIN.getEmoji();
+      return weather.id() >= 210 && weather.id() < 230
+          ? WeatherEmoji.CLOUD_LIGHTNING.getEmoji()
+          : WeatherEmoji.THUNDER_CLOUD_RAIN.getEmoji();
     }
     // Drizzle or rain
-    else if (weather.id() >= 300 && weather.id() <= 500) {
+    if (weather.id() >= 300 && weather.id() <= 500) {
       return WeatherEmoji.CLOUD_RAIN.getEmoji();
     }
     // Snow
-    else if (weather.id() >= 600 && weather.id() < 700) {
+    if (weather.id() >= 600 && weather.id() < 700) {
       return WeatherEmoji.CLOUD_WITH_SNOW.getEmoji();
     }
     // Atmosphere codes
-    else if (weather.id() >= 700 && weather.id() < 800) {
+    if (weather.id() >= 700 && weather.id() < 800) {
       return atmosphereEmojis.getOrDefault(weather.id(), WeatherEmoji.FOG).getEmoji();
     }
     // Clouds
-    else if (weather.id() > 800) {
+    if (weather.id() > 800) {
       if (weather.description().equalsIgnoreCase("scattered clouds")) {
         return isDaytime ? WeatherEmoji.WHITE_SUN_CLOUD.getEmoji()
             : WeatherEmoji.FACE_IN_CLOUDS.getEmoji();
