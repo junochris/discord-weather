@@ -22,6 +22,7 @@ public class WeatherForecastFormatter {
     // Build a String to be posted into Discord
 
     StringBuilder discordString = new StringBuilder();
+    discordString.append(addSeparator());
     discordString.append(getFormattedLogistics(forecast));
 
     forecast.alerts().forEach(alert -> discordString.append(getFormattedAlert(alert)));
@@ -33,7 +34,12 @@ public class WeatherForecastFormatter {
         .stream().map(weatherRecord -> getFormattedHourlyForecast(weatherRecord, forecast))
         .forEach(discordString::append);
 
+    discordString.append(addSeparator());
     return discordString.toString();
+  }
+
+  public static String addSeparator() {
+    return "===========================\n";
   }
 
   /**
