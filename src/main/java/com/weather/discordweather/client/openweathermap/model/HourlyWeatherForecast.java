@@ -6,6 +6,5 @@ public record HourlyWeatherForecast(
     int dt,
     float temp,
     int humidity,
-    List<WeatherCondition> weather,
-    List<WeatherAlert> alerts
+    List<WeatherCondition> weather
 ) {}

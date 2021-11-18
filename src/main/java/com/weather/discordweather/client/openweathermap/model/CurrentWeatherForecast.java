@@ -8,6 +8,5 @@ public record CurrentWeatherForecast(
     int sunset,
     float temp,
     int humidity,
-    List<WeatherCondition> weather,
-    List<WeatherAlert> alerts
+    List<WeatherCondition> weather
 ) {}

@@ -42,7 +42,7 @@ public class WeatherForecastMapper {
         new WeatherForecast(
             getLocation(geolocation),
             LocalDateTime.ofEpochSecond(currentDay.dt(), 0, timezone),
-            collectAlerts(currentDay, timezone),
+            collectAlerts(weather, timezone),
             getCurrentWeatherCondition(currentDay),
             round(currentDay.temp().max()),
             round(currentDay.temp().min()),
@@ -60,11 +60,11 @@ public class WeatherForecastMapper {
   }
 
   private static List<WeatherAlert> collectAlerts(
-      DailyWeatherForecast forecast,
+      OneCallResponse response,
       ZoneOffset timezone
   ) {
-    if (forecast.alerts().isPresent()) {
-      return forecast.alerts().get().stream().map(
+    if (response.alerts().isPresent()) {
+      return response.alerts().get().stream().map(
           alert -> new com.weather.discordweather.model.WeatherAlert(
               alert.event(),
               LocalDateTime.ofEpochSecond(alert.start(), 0, timezone),
