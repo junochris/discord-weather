@@ -156,7 +156,7 @@ public class WeatherForecastFormatter {
           : WeatherEmoji.THUNDER_CLOUD_RAIN.getEmoji();
     }
     // Drizzle or rain
-    if (weather.id() >= 300 && weather.id() <= 500) {
+    if (weather.id() >= 300 && weather.id() < 600) {
       return WeatherEmoji.CLOUD_RAIN.getEmoji();
     }
     // Snow
