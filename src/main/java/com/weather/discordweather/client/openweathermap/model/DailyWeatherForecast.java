@@ -6,6 +6,7 @@ public record DailyWeatherForecast(
     int dt,
     int sunrise,
     int sunset,
+    float moon_phase,
     TemperatureForecast temp,
     int humidity,
     List<WeatherCondition> weather

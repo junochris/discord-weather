@@ -104,7 +104,7 @@ public class WeatherForecastFormatter {
             :city_dusk: `%s`
 
             """,
-        getWeatherEmoji(forecast.condition(), true),
+        getWeatherEmoji(forecast.condition(), true, 0.0f),
         forecast.condition().description(),
         forecast.highTemp(),
         forecast.lowTemp(),
@@ -133,11 +133,43 @@ public class WeatherForecastFormatter {
             record.condition(),
             record.time().isAfter(forecast.sunrise()) && record.time()
                 .isBefore(forecast.sunset()) || record.time()
-                .isAfter(forecast.sunrise().plusHours(24))
+                .isAfter(forecast.sunrise().plusHours(24)),
+            forecast.moonPhase()
         ),
         record.time().format(DateTimeFormatter.ofPattern("h a")),
         record.condition().temperature()
     );
+  }
+
+  /**
+   * Return the appropriate moon emoji based on the phase
+   *
+   * @param moonPhase Moon phase based on One Call API response
+   * @return A String representing the Discord emoji
+   */
+  private static String getMoonEmoji(float moonPhase) {
+    if (moonPhase == 0.0f || moonPhase == 1.0f) {
+      return WeatherEmoji.NEW_MOON.getEmoji();
+    }
+    if (moonPhase > 0.0f && moonPhase < 0.25f) {
+      return WeatherEmoji.WAXING_CRESCENT_MOON.getEmoji();
+    }
+    if (moonPhase == 0.25f) {
+      return WeatherEmoji.FIRST_QUARTER_MOON.getEmoji();
+    }
+    if (moonPhase > 0.25f && moonPhase < 0.5f) {
+      return WeatherEmoji.WAXING_GIBBOUS_MOON.getEmoji();
+    }
+    if (moonPhase == 0.5f) {
+      return WeatherEmoji.FULL_MOON.getEmoji();
+    }
+    if (moonPhase > 0.5f && moonPhase < 0.75f) {
+      return WeatherEmoji.WANING_GIBBOUS_MOON.getEmoji();
+    }
+    if (moonPhase == 0.75f) {
+      return WeatherEmoji.LAST_QUARTER_MOON.getEmoji();
+    }
+    return WeatherEmoji.WANING_CRESCENT_MOON.getEmoji();
   }
 
   /**
@@ -146,9 +178,14 @@ public class WeatherForecastFormatter {
    *
    * @param weather WeatherCondition to base the emoji off of
    * @param isDaytime Boolean to determine whether to use a daytime or nighttime emoji
+   * @param moonPhase If nighttime, used to get the appropriate moon emoji
    * @return A String representation of the Discord emoji
    */
-  private static String getWeatherEmoji(WeatherCondition weather, boolean isDaytime) {
+  private static String getWeatherEmoji(
+      WeatherCondition weather,
+      boolean isDaytime,
+      float moonPhase
+  ) {
     // Thunderstorm
     if (weather.id() >= 200 && weather.id() < 300) {
       return weather.id() >= 210 && weather.id() < 230
@@ -182,6 +219,6 @@ public class WeatherForecastFormatter {
     }
 
     return isDaytime ? WeatherEmoji.SUNNY.getEmoji()
-        : WeatherEmoji.WANING_GIBBOUS_MOON.getEmoji();
+        : getMoonEmoji(moonPhase);
   }
 }

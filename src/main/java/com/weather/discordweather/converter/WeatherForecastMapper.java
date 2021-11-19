@@ -49,6 +49,7 @@ public class WeatherForecastMapper {
             currentDay.humidity(),
             LocalDateTime.ofEpochSecond(currentDay.sunrise(), 0, timezone),
             LocalDateTime.ofEpochSecond(currentDay.sunset(), 0, timezone),
+            currentDay.moon_phase(),
             collectNext6TemperaturesEvery3Hours(weather.hourly(), timezone)
         )
     );

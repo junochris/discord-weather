@@ -112,6 +112,7 @@ public class WeatherControllerTest {
               1635447600,
               1635429842,
               1635469291,
+              1.0f,
               new TemperatureForecast(76.93f, 63.9f),
               36,
               List.of(new WeatherCondition(800, "clear sky"))
