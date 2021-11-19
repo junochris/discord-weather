@@ -14,6 +14,7 @@ import java.util.Optional;
 
 @Named
 public class WeatherForecastGateway {
+
   private final DiscordClient discordClient;
   private final MapQuestClient mapQuestClient;
   private final OpenWeatherMapClient openWeatherClient;

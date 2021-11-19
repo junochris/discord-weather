@@ -1,7 +1,7 @@
 package com.weather.discordweather.client.discord;
 
-import com.weather.discordweather.util.JsonUtils;
 import com.weather.discordweather.client.discord.model.ExecuteWebhookRequest;
+import com.weather.discordweather.util.JsonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -11,7 +11,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
 import java.util.Map;
 
 @Named
@@ -33,11 +32,6 @@ public class DiscordClient {
     ExecuteWebhookRequest webhookRequest = new ExecuteWebhookRequest(content);
     String jsonContent = JsonUtils.getJsonStringFromObject(webhookRequest);
 
-    // URI (URL) parameters
-    Map<String, String> urlParams = new HashMap<>();
-    urlParams.put("id", webhookId);
-    urlParams.put("token", webhookToken);
-
     HttpRequest request = HttpRequest.newBuilder()
         .uri(
             URI.create(
@@ -45,7 +39,7 @@ public class DiscordClient {
                     .path("/api/webhooks/{id}/{token}")
                     .buildAndExpand(
                         Map.ofEntries(
-                            Map.entry("Id", webhookId),
+                            Map.entry("id", webhookId),
                             Map.entry("token", webhookToken)
                         )
                     )

@@ -9,12 +9,13 @@ public record WeatherForecast(
 
     List<WeatherAlert> alerts,
 
-    String weatherCondition,
-    float highTemp,
-    float lowTemp,
+    WeatherCondition condition,
+    int highTemp,
+    int lowTemp,
     int humidity,
     LocalDateTime sunrise,
     LocalDateTime sunset,
+    float moonPhase,
 
     List<WeatherRecord> weatherRecords
 ) {}
