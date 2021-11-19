@@ -31,14 +31,15 @@ public class WeatherForecastFormatter {
 
     forecast
         .weatherRecords()
-        .stream().map(weatherRecord -> getFormattedHourlyForecast(weatherRecord, forecast))
+        .stream()
+        .map(weatherRecord -> getFormattedHourlyForecast(weatherRecord, forecast))
         .forEach(discordString::append);
 
     discordString.append(addSeparator());
     return discordString.toString();
   }
 
-  public static String addSeparator() {
+  private static String addSeparator() {
     return "===========================\n";
   }
 
@@ -131,9 +132,9 @@ public class WeatherForecastFormatter {
             """,
         getWeatherEmoji(
             record.condition(),
-            record.time().isAfter(forecast.sunrise()) && record.time()
-                .isBefore(forecast.sunset()) || record.time()
-                .isAfter(forecast.sunrise().plusHours(24)),
+            record.time().isAfter(forecast.sunrise())
+                && record.time().isBefore(forecast.sunset())
+                || record.time().isAfter(forecast.sunrise().plusHours(24)),
             forecast.moonPhase()
         ),
         record.time().format(DateTimeFormatter.ofPattern("h a")),
