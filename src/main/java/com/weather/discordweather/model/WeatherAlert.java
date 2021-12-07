@@ -5,5 +5,6 @@ import java.time.LocalDateTime;
 public record WeatherAlert(
     String event,
     LocalDateTime start,
-    LocalDateTime end
+    LocalDateTime end,
+    String description
 ) {}

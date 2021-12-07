@@ -35,6 +35,8 @@ public class WeatherForecastFormatter {
         .map(weatherRecord -> getFormattedHourlyForecast(weatherRecord, forecast))
         .forEach(discordString::append);
 
+    forecast.alerts().forEach(alert -> discordString.append(getFormattedAlertDescription(alert)));
+
     discordString.append(addSeparator());
     return discordString.toString();
   }
@@ -81,6 +83,16 @@ public class WeatherForecastFormatter {
         alert.event(),
         alert.start().format(timeFormat),
         alert.end().format(timeFormat)
+    );
+  }
+
+  private static String getFormattedAlertDescription(WeatherAlert alert) {
+    return String.format(
+        """
+            
+            '%s'
+            """,
+        alert.description()
     );
   }
 

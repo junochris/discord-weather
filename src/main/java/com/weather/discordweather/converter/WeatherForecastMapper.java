@@ -69,7 +69,8 @@ public class WeatherForecastMapper {
           alert -> new com.weather.discordweather.model.WeatherAlert(
               alert.event(),
               LocalDateTime.ofEpochSecond(alert.start(), 0, timezone),
-              LocalDateTime.ofEpochSecond(alert.end(), 0, timezone)
+              LocalDateTime.ofEpochSecond(alert.end(), 0, timezone),
+              alert.description()
           )).collect(Collectors.toUnmodifiableList());
     }
     return Collections.emptyList();
