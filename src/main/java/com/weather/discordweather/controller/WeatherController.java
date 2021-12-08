@@ -30,7 +30,7 @@ public class WeatherController {
       @RequestParam(value = "lon", required = false) Double lon,
       @RequestParam(value = "location", required = false) String location
   ) {
-    if (isInvalidCoordinatesAndLocation(lat, lon, location)) {
+    if (isInvalidInputs(lat, lon, location)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
     return gateway
@@ -45,7 +45,7 @@ public class WeatherController {
       @RequestParam(value = "lon", required = false) Double lon,
       @RequestParam(value = "location", required = false) String location
   ) {
-    if (isInvalidCoordinatesAndLocation(lat, lon, location)) {
+    if (isInvalidInputs(lat, lon, location)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
     return gateway.getWeatherForecast(lat, lon, location)
@@ -71,6 +71,14 @@ public class WeatherController {
     return isInvalidLatitude(lat) || isInvalidLongitude(lon)
         ? ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         : ResponseEntity.ok(gateway.reverseGeocode(lat, lon));
+  }
+
+  private boolean isInvalidInputs(Double lat, Double lon, String location) {
+    return areAllInputsIncluded(lat, lon, location) || isInvalidCoordinatesAndLocation(lat, lon, location);
+  }
+
+  private boolean areAllInputsIncluded(Double lat, Double lon, String location) {
+    return lat != null && lon != null && !location.isEmpty();
   }
 
   private boolean isInvalidCoordinatesAndLocation(Double lat, Double lon, String location) {

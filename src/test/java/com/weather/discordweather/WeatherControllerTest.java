@@ -194,6 +194,14 @@ public class WeatherControllerTest {
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
       assertThat(response.getBody()).isEqualTo(forecast.get());
     }
+    
+    @Test
+    @DisplayName("returns a 400 Bad Request if lat, lon, and location are valid")
+    public void getWeatherValidLatLonLocation() {
+      var response = new WeatherController(gateway).weather(33.0, 80.0, "detroit");
+      Mockito.verifyNoInteractions(gateway);
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Nested

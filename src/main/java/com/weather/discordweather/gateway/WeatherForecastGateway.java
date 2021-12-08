@@ -9,7 +9,6 @@ import com.weather.discordweather.client.openweathermap.OpenWeatherMapClient;
 import com.weather.discordweather.client.openweathermap.model.OneCallResponse;
 import com.weather.discordweather.converter.WeatherForecastMapper;
 import com.weather.discordweather.model.WeatherForecast;
-import java.util.List;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -34,27 +33,27 @@ public class WeatherForecastGateway {
 
   public Optional<WeatherForecast> getWeatherForecast(Double lat, Double lon, String location) {
     GeocodeResponse mapQuestResponse;
-    OneCallResponse openWeatherResponse = null;
+    OneCallResponse openWeatherResponse;
 
     if (!location.isEmpty()) {
       mapQuestResponse = mapQuestClient.forwardGeocode(stripSpaces(location));
       Optional<Coordinate> coordinates = extractCoordinates(mapQuestResponse);
       if (coordinates.isPresent()) {
-        openWeatherResponse = openWeatherClient.getWeather(coordinates.get().lat(),
+        openWeatherResponse = openWeatherClient.getWeather(
+            coordinates.get().lat(),
             coordinates.get().lng());
+      } else {
+        return Optional.empty();
       }
     } else {
       mapQuestResponse = mapQuestClient.reverseGeocode(lat, lon);
       openWeatherResponse = openWeatherClient.getWeather(lat, lon);
     }
 
-    if (mapQuestResponse != null && openWeatherResponse != null) {
-      return WeatherForecastMapper.fromOpenWeatherMapAndMapQuest(
-          openWeatherResponse,
-          mapQuestResponse
-      );
-    }
-    return Optional.empty();
+    return WeatherForecastMapper.fromOpenWeatherMapAndMapQuest(
+        openWeatherResponse,
+        mapQuestResponse
+    );
   }
 
   public GeocodeResponse forwardGeocode(String location) {
@@ -77,11 +76,14 @@ public class WeatherForecastGateway {
     if (response.results().isEmpty()) {
       return Optional.empty();
     }
-    List<Geolocation> locations = response.results().get(0).locations();
-    if (locations.isEmpty()) {
-      return Optional.empty();
-    }
-    return Optional.of(locations.get(0).latLng());
+
+    return response
+        .results()
+        .get(0)
+        .locations()
+        .stream()
+        .map(Geolocation::latLng)
+        .findFirst();
   }
 
   private String stripSpaces(String location) {
