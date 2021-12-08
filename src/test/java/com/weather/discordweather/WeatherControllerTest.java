@@ -54,7 +54,7 @@ public class WeatherControllerTest {
     @Test
     @DisplayName("returns a 400 Bad Request if the latitude is missing")
     public void getWeatherMissingLat() {
-      var missingLat = new WeatherController(gateway).weather(null, -100.0);
+      var missingLat = new WeatherController(gateway).weather(null, -100.0, "");
       Mockito.verifyNoInteractions(gateway);
       assertThat(missingLat.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -62,7 +62,7 @@ public class WeatherControllerTest {
     @Test
     @DisplayName("returns a 400 Bad Request if the longitude is missing")
     public void getWeatherMissingLong() {
-      var missingLong = new WeatherController(gateway).weather(33.0, null);
+      var missingLong = new WeatherController(gateway).weather(33.0, null, "");
       Mockito.verifyNoInteractions(gateway);
       assertThat(missingLong.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -70,7 +70,7 @@ public class WeatherControllerTest {
     @Test
     @DisplayName("returns a 400 Bad Request if both latitude and longitude are missing")
     public void getWeatherMissingBoth() {
-      var missingBoth = new WeatherController(gateway).weather(null, null);
+      var missingBoth = new WeatherController(gateway).weather(null, null, "");
       Mockito.verifyNoInteractions(gateway);
       assertThat(missingBoth.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -78,7 +78,7 @@ public class WeatherControllerTest {
     @Test
     @DisplayName("returns a 400 Bad Request if the latitude is invalid")
     public void getWeatherInvalidLatitude() {
-      var response = new WeatherController(gateway).weather(91.0, 150.0);
+      var response = new WeatherController(gateway).weather(91.0, 150.0, "");
       Mockito.verifyNoInteractions(gateway);
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -86,22 +86,22 @@ public class WeatherControllerTest {
     @Test
     @DisplayName("returns a 400 Bad Request if the longitude is invalid")
     public void getWeatherInvalidLongitude() {
-      var response = new WeatherController(gateway).weather(50.0, 190.0);
+      var response = new WeatherController(gateway).weather(50.0, 190.0, "");
       Mockito.verifyNoInteractions(gateway);
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
     @DisplayName("returns a 400 Bad Request if both latitude and longitude are invalid")
-    public void getWeatherInvalidBoth() {
-      var response = new WeatherController(gateway).weather(100.0, 190.0);
+    public void getWeatherInvalidLatitudeAndLongitude() {
+      var response = new WeatherController(gateway).weather(100.0, 190.0, "");
       Mockito.verifyNoInteractions(gateway);
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
     @DisplayName("returns a 200 OK if latitude and longitude are valid")
-    public void getWeatherValid() {
+    public void getWeatherValidLatitudeAndLongitude() {
       OneCallResponse callResponse = new OneCallResponse(
           1,
           new CurrentWeatherForecast(1635447600, 1635429842, 1635469291, 63.9f, 59,
@@ -136,11 +136,71 @@ public class WeatherControllerTest {
           geocodeResponse
       );
       assertThat(forecast).isNotEmpty();
-      Mockito.when(gateway.getWeatherForecast(33.0, 80.0)).thenReturn(forecast);
+      Mockito.when(gateway.getWeatherForecast(33.0, 80.0, "")).thenReturn(forecast);
       var controller = new WeatherController(gateway);
-      var response = controller.weather(33.0, 80.0);
+      var response = controller.weather(33.0, 80.0, "");
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
       assertThat(response.getBody()).isEqualTo(forecast.get());
+    }
+
+    @Test
+    @DisplayName("returns a 400 Bad Request if the coordinates and location are missing")
+    public void getWeatherMissingCoordinatesAndLocation() {
+      var response = new WeatherController(gateway).weather(null, null, "");
+      Mockito.verifyNoInteractions(gateway);
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @DisplayName("returns a 200 OK if location is valid")
+    public void getWeatherValidLocation() {
+      OneCallResponse callResponse = new OneCallResponse(
+          1,
+          new CurrentWeatherForecast(1635447600, 1635429842, 1635469291, 63.9f, 59,
+              List.of(new WeatherCondition(800, "clear sky"))
+          ),
+          Collections.emptyList(),
+          List.of(new DailyWeatherForecast(
+              1635447600,
+              1635429842,
+              1635469291,
+              1.0f,
+              new TemperatureForecast(76.93f, 63.9f),
+              36,
+              List.of(new WeatherCondition(800, "clear sky"))
+          )),
+          Optional.of(Collections.emptyList())
+      );
+
+      GeocodeResponse geocodeResponse = new GeocodeResponse(
+          List.of(new GeocodeResult(
+              List.of(new Geolocation(
+                  "Detroit",
+                  "MI",
+                  "US",
+                  new Coordinate(100.0, -100.0)
+              ))
+          ))
+      );
+
+      Optional<WeatherForecast> forecast = WeatherForecastMapper.fromOpenWeatherMapAndMapQuest(
+          callResponse,
+          geocodeResponse
+      );
+      assertThat(forecast).isNotEmpty();
+      Mockito.when(gateway.getWeatherForecast(null, null, "detroit")).thenReturn(forecast);
+      var controller = new WeatherController(gateway);
+      var response = controller.weather(null, null, "detroit");
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+      assertThat(response.getBody()).isEqualTo(forecast.get());
+    }
+    
+    @Test
+    @DisplayName("returns a 400 Bad Request if lat, lon, and location are valid")
+    public void getWeatherValidLatLonLocation() {
+      var response = new WeatherController(gateway).weather(33.0, 80.0, "detroit");
+      Mockito.verifyNoInteractions(gateway);
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
   }
 

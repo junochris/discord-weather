@@ -27,24 +27,28 @@ public class WeatherController {
   @GetMapping("/weather")
   public ResponseEntity<WeatherForecast> weather(
       @RequestParam(value = "lat", required = false) Double lat,
-      @RequestParam(value = "lon", required = false) Double lon
+      @RequestParam(value = "lon", required = false) Double lon,
+      @RequestParam(value = "location", required = false) String location
   ) {
-    if (isInvalidLatitude(lat) || isInvalidLongitude(lon)) {
+    if (isInvalidInputs(lat, lon, location)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-    } else {
-      return gateway
-          .getWeatherForecast(lat, lon)
-          .map(ResponseEntity::ok)
-          .orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).body(null));
     }
+    return gateway
+        .getWeatherForecast(lat, lon, location)
+        .map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.NO_CONTENT).body(null));
   }
 
   @PostMapping("/weather")
   public ResponseEntity<String> postWeather(
       @RequestParam(value = "lat", required = false) Double lat,
-      @RequestParam(value = "lon", required = false) Double lon
+      @RequestParam(value = "lon", required = false) Double lon,
+      @RequestParam(value = "location", required = false) String location
   ) {
-    return gateway.getWeatherForecast(lat, lon)
+    if (isInvalidInputs(lat, lon, location)) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+    }
+    return gateway.getWeatherForecast(lat, lon, location)
         .map(weatherForecast -> ResponseEntity.ok(
             gateway.executeWebhook(WeatherForecastFormatter.toDiscordString(weatherForecast))))
         .orElseGet(() -> ResponseEntity.ok(null));
@@ -67,6 +71,18 @@ public class WeatherController {
     return isInvalidLatitude(lat) || isInvalidLongitude(lon)
         ? ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
         : ResponseEntity.ok(gateway.reverseGeocode(lat, lon));
+  }
+
+  private boolean isInvalidInputs(Double lat, Double lon, String location) {
+    return areAllInputsIncluded(lat, lon, location) || isInvalidCoordinatesAndLocation(lat, lon, location);
+  }
+
+  private boolean areAllInputsIncluded(Double lat, Double lon, String location) {
+    return lat != null && lon != null && !location.isEmpty();
+  }
+
+  private boolean isInvalidCoordinatesAndLocation(Double lat, Double lon, String location) {
+    return (isInvalidLatitude(lat) || isInvalidLongitude(lon)) && location.isEmpty();
   }
 
   private boolean isInvalidLatitude(Double lat) {
