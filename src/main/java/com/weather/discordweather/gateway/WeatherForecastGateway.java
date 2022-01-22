@@ -65,6 +65,10 @@ public class WeatherForecastGateway {
   }
 
   public String executeWebhook(String forecast) {
+    if (forecast.length() > 2000) {
+      return paginateForecast(forecast);
+    }
+
     return discordClient.executeWebhook(
         "896866700702662697",
         "qcvv8ihtrGTPjZswASiJaOsy-qMua58DkgAb-XA39WAG5D1FxFDz1EGJ53FavFz-GjTE",
@@ -84,6 +88,23 @@ public class WeatherForecastGateway {
         .stream()
         .map(Geolocation::latLng)
         .findFirst();
+  }
+
+  private String paginateForecast(String forecast) {
+    while (forecast.length() > 2000) {
+      int i = forecast.lastIndexOf('\n', 2000);
+      discordClient.executeWebhook(
+          "896866700702662697",
+          "qcvv8ihtrGTPjZswASiJaOsy-qMua58DkgAb-XA39WAG5D1FxFDz1EGJ53FavFz-GjTE",
+          forecast.substring(0, i)
+      );
+      forecast = forecast.substring(i + 1);
+    }
+    return discordClient.executeWebhook(
+        "896866700702662697",
+        "qcvv8ihtrGTPjZswASiJaOsy-qMua58DkgAb-XA39WAG5D1FxFDz1EGJ53FavFz-GjTE",
+        forecast
+    );
   }
 
   private String stripSpaces(String location) {
