@@ -9,6 +9,9 @@ import com.weather.discordweather.client.openweathermap.OpenWeatherMapClient;
 import com.weather.discordweather.client.openweathermap.model.OneCallResponse;
 import com.weather.discordweather.converter.WeatherForecastMapper;
 import com.weather.discordweather.model.WeatherForecast;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -19,6 +22,9 @@ public class WeatherForecastGateway {
   private final DiscordClient discordClient;
   private final MapQuestClient mapQuestClient;
   private final OpenWeatherMapClient openWeatherClient;
+  private final static int DISCORD_CHARACTER_LIMIT = 2000;
+  private final static String discordWebhookId = "896866700702662697";
+  private final static String discordWebhookToken = "qcvv8ihtrGTPjZswASiJaOsy-qMua58DkgAb-XA39WAG5D1FxFDz1EGJ53FavFz-GjTE";
 
   @Inject
   public WeatherForecastGateway(
@@ -70,8 +76,8 @@ public class WeatherForecastGateway {
     }
 
     return discordClient.executeWebhook(
-        "896866700702662697",
-        "qcvv8ihtrGTPjZswASiJaOsy-qMua58DkgAb-XA39WAG5D1FxFDz1EGJ53FavFz-GjTE",
+        discordWebhookId,
+        discordWebhookToken,
         forecast
     );
   }
@@ -91,18 +97,22 @@ public class WeatherForecastGateway {
   }
 
   private String paginateForecast(String forecast) {
-    while (forecast.length() > 2000) {
-      int i = forecast.lastIndexOf('\n', 2000);
+    List<String> paginatedForecast = forecast.lines().reduce(Arrays.asList(""), (a, b) -> {
+
+    });
+
+    while (forecast.length() > DISCORD_CHARACTER_LIMIT) {
+      int i = forecast.lastIndexOf('\n', DISCORD_CHARACTER_LIMIT);
       discordClient.executeWebhook(
-          "896866700702662697",
-          "qcvv8ihtrGTPjZswASiJaOsy-qMua58DkgAb-XA39WAG5D1FxFDz1EGJ53FavFz-GjTE",
+          discordWebhookId,
+          discordWebhookToken,
           forecast.substring(0, i)
       );
       forecast = forecast.substring(i + 1);
     }
     return discordClient.executeWebhook(
-        "896866700702662697",
-        "qcvv8ihtrGTPjZswASiJaOsy-qMua58DkgAb-XA39WAG5D1FxFDz1EGJ53FavFz-GjTE",
+        discordWebhookId,
+        discordWebhookToken,
         forecast
     );
   }
