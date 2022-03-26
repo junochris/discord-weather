@@ -147,6 +147,8 @@ public class WeatherGatewayTest {
           geocodeResponse
       );
 
+      Mockito.when(discordClient.executeWebhook(anyString(), anyString(), anyString())).thenReturn("");
+
       assertThat(forecast).isNotEmpty();
       String formattedForecast = WeatherForecastFormatter.toDiscordString(forecast.get());
       var gateway = new WeatherForecastGateway(discordClient, mapQuestClient, openWeatherMapClient);
