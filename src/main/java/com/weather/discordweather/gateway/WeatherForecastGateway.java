@@ -9,6 +9,9 @@ import com.weather.discordweather.client.openweathermap.OpenWeatherMapClient;
 import com.weather.discordweather.client.openweathermap.model.OneCallResponse;
 import com.weather.discordweather.converter.WeatherForecastMapper;
 import com.weather.discordweather.model.WeatherForecast;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -19,6 +22,9 @@ public class WeatherForecastGateway {
   private final DiscordClient discordClient;
   private final MapQuestClient mapQuestClient;
   private final OpenWeatherMapClient openWeatherClient;
+  private static final int DISCORD_CHARACTER_LIMIT = 2000;
+  private static final String discordWebhookId = "896866700702662697";
+  private static final String discordWebhookToken = "qcvv8ihtrGTPjZswASiJaOsy-qMua58DkgAb-XA39WAG5D1FxFDz1EGJ53FavFz-GjTE";
 
   @Inject
   public WeatherForecastGateway(
@@ -65,9 +71,20 @@ public class WeatherForecastGateway {
   }
 
   public String executeWebhook(String forecast) {
+    if (forecast.length() > 2000) {
+      return paginateForecast(forecast).stream().map(
+          page -> discordClient.executeWebhook(
+              discordWebhookId,
+              discordWebhookToken,
+              page
+          ))
+          .reduce((first, second) -> second)
+          .orElseThrow(IllegalStateException::new);
+    }
+
     return discordClient.executeWebhook(
-        "896866700702662697",
-        "qcvv8ihtrGTPjZswASiJaOsy-qMua58DkgAb-XA39WAG5D1FxFDz1EGJ53FavFz-GjTE",
+        discordWebhookId,
+        discordWebhookToken,
         forecast
     );
   }
@@ -84,6 +101,20 @@ public class WeatherForecastGateway {
         .stream()
         .map(Geolocation::latLng)
         .findFirst();
+  }
+
+  private List<String> paginateForecast(String forecast) {
+    return forecast.lines().collect(
+        () -> new ArrayList<>(Collections.singleton("")),
+        (pages, line) -> {
+          String lastPage = pages.get(pages.size() - 1);
+          if (lastPage.length() + line.length() <= DISCORD_CHARACTER_LIMIT) {
+            pages.set(pages.size() - 1, lastPage.concat(line));
+          } else {
+            pages.add(line);
+          }
+        },
+        ArrayList::addAll);
   }
 
   private String stripSpaces(String location) {

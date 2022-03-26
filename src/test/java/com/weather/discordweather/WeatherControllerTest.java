@@ -194,7 +194,7 @@ public class WeatherControllerTest {
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
       assertThat(response.getBody()).isEqualTo(forecast.get());
     }
-    
+
     @Test
     @DisplayName("returns a 400 Bad Request if lat, lon, and location are valid")
     public void getWeatherValidLatLonLocation() {

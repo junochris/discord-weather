@@ -74,7 +74,10 @@ public class WeatherController {
   }
 
   private boolean isInvalidInputs(Double lat, Double lon, String location) {
-    return areAllInputsIncluded(lat, lon, location) || isInvalidCoordinatesAndLocation(lat, lon, location);
+    return areAllInputsIncluded(lat, lon, location) || isInvalidCoordinatesAndLocation(
+        lat,
+        lon,
+        location);
   }
 
   private boolean areAllInputsIncluded(Double lat, Double lon, String location) {
