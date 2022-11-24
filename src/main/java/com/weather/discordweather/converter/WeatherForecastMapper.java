@@ -17,7 +17,6 @@ import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class WeatherForecastMapper {
@@ -66,12 +65,12 @@ public class WeatherForecastMapper {
   ) {
     if (response.alerts().isPresent()) {
       return response.alerts().get().stream().map(
-          alert -> new com.weather.discordweather.model.WeatherAlert(
+          alert -> new WeatherAlert(
               alert.event(),
               LocalDateTime.ofEpochSecond(alert.start(), 0, timezone),
               LocalDateTime.ofEpochSecond(alert.end(), 0, timezone),
               alert.description()
-          )).collect(Collectors.toUnmodifiableList());
+          )).toList();
     }
     return Collections.emptyList();
   }
@@ -93,7 +92,7 @@ public class WeatherForecastMapper {
                   round(hour.temp())
               )
           );
-        }).collect(Collectors.toUnmodifiableList());
+        }).toList();
   }
 
   private static WeatherCondition getCurrentWeatherCondition(DailyWeatherForecast currentDay) {
